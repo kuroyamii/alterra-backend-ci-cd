@@ -48,14 +48,14 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/ci-cd-test:${{steps.tag.outputs.tag}}
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{secrets.DOCKER_REPONAME}}:${{steps.tag.outputs.tag}}
       - name: Build and push latest
         uses: docker/build-push-action@v3
         with:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/ci-cd-test:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{secrets.DOCKER_REPONAME}}:latest
 
   deploy:
     needs: push_docker
@@ -69,7 +69,7 @@ jobs:
           key: ${{secrets.AWS_KEY}}
           port: ${{secrets.SSH_PORT}}
           script: |
-            docker pull kuroyamii/ci-cd-test:latest
+            docker pull kuroyamii/${{secrets.DOCKER_REPONAME}}:latest
             docker stop ci-cd
             docker rm ci-cd
-            docker run -d --name ci-cd -p 80:8080 -e SERVER_ADDRESS=:8080 -e DB_ADDRESS=database-backend.cs9rgvxmzxmw.ap-northeast-1.rds.amazonaws.com -e DB_PORT=3306 -e DB_USERNAME=kuroyamii -e DB_PASSWORD=kuroyamii123 -e DB_NAME=alta_db kuroyamii/ci-cd-test:latest
+            docker run -d --name ci-cd -p ${{secrets.CONTAINER_PORT}} -e SERVER_ADDRESS=${{secrets.SERVER_ADDRESS}} -e DB_ADDRESS=${{secrets.DB_ADDRESS}} -e DB_PORT=${{secrets.DB_PORT}} -e DB_USERNAME=${{secrets.DB_USERNAME}} -e DB_PASSWORD=${{secrets.DB_PASSWORD}} -e DB_NAME=${{secrets.DB_NAME}} ${{secrets.DOCKER_USERNAME}}/${{secrets.DOCKER_REPONAME}}:latest
